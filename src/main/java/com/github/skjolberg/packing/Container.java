@@ -1,79 +1,95 @@
 package com.github.skjolberg.packing;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static java.lang.Math.max;
 
-public class Container extends Box {
+public class Container extends WithDimensions {
 
-	private int stackHeight = 0;
-	private ArrayList<Level> levels = new ArrayList<Level>();
-	
+	private final String name;
+
+	private final int width;
+	private final int depth;
+	private final int height;
+
+	private final int stackHeight;
+	private final List<Level> levels;
+
 	public Container(Dimension dimension) {
-		super(dimension.getName(), dimension.getWidth(), dimension.getDepth(), dimension.getHeight());
+		this(dimension.getName(), dimension.getWidth(), dimension.getDepth(), dimension.getHeight());
 	}
 
 	public Container(int w, int d, int h) {
-		super(w, d, h);
+		this(null, w, d, h);
 	}
 
 	public Container(String name, int w, int d, int h) {
-		super(name, w, d, h);
+        this.name = name;
+        this.width = w;
+        this.depth = d;
+        this.height = h;
+
+        levels = new ArrayList<>();
+        stackHeight = 0;
+    }
+
+    private Container(String name, int w, int d, int h, int stackHeight, List<Level> levels) {
+        this.name = name;
+        this.width = w;
+        this.depth = d;
+        this.height = h;
+
+        this.levels = levels;
+        this.stackHeight = stackHeight;
+    }
+
+	public Container add(Level element) {
+        return add(levels.size(), element); // add at the end.
 	}
 
-	public boolean add(Level element) {
-		if(!levels.isEmpty()) {
-			stackHeight += currentLevelStackHeight();
-		}
-		
-		return levels.add(element);
-	}
-	
-	public int getStackHeight() {
-		return stackHeight + currentLevelStackHeight();
-	}
-	
-	public void add(int index, Level element) {
-		if(!levels.isEmpty()) {
-			stackHeight += currentLevelStackHeight();
-		}
-		
-		levels.add(index, element);
-	}
-	
-	public int currentLevelStackHeight() {
-		if(levels.isEmpty()) {
-			return 0;
-		}
-		return levels.get(levels.size() - 1).getHeight();
-	}
-	
-	public void add(Placement placement) {
-		levels.get(levels.size() - 1).add(placement);
-	}
-	
+    public Container add(int index, Level element) {
+        int newStackHeight = stackHeight;
+
+        if(!levels.isEmpty()) {
+            newStackHeight += levels.get(levels.size() - 1).getHeight();
+        }
+
+        List<Level> newLevels = new ArrayList<>(levels);
+        newLevels.add(index, element);
+
+        return new Container(name, width, depth, height, newStackHeight, newLevels);
+    }
+
+
+    public Container add(Placement placement) {
+	    int lastIndex = levels.size() - 1;
+        Level newLevel = levels.get(lastIndex).add(placement);
+        List<Level> newLevels = new ArrayList<>(levels);
+        newLevels.set(lastIndex, newLevel);
+
+        return new Container(name, width, depth, height, stackHeight, newLevels);
+    }
+
+
 	public void addLevel() {
 		add(new Level());
 	}
 	
 	public Dimension getFreeSpace() {
-		int spaceHeight = height - getStackHeight();
+		int spaceHeight = height - stackHeight;
 		if(spaceHeight < 0) {
 			throw new IllegalArgumentException("Remaining free space is negative at " + spaceHeight);
 		}
 		return new Dimension(width, depth, spaceHeight);
 	}
 	
-	public ArrayList<Level> getLevels() {
+	List<Level> getLevels() {
 		return levels;
 	}
 	
 	public Placement get(int level, int placement) {
 		return levels.get(level).get(placement);
-	}
-
-	public void validateCurrentLevel() {
-		levels.get(levels.size() - 1).validate();
 	}
 
 	@Override
@@ -104,11 +120,6 @@ public class Container extends Box {
 		return true;
 	}
 	
-	public void clear() {
-		levels.clear();
-		stackHeight = 0;
-	}
-	
 	public int getBoxCount() {
 		int count = 0;
 		for(Level level : levels) {
@@ -118,7 +129,7 @@ public class Container extends Box {
 	}
 
 	public Dimension getUsedSpace() {
-		Dimension maxBox = new Dimension();
+		Dimension maxBox = Dimension.EMPTY;
 		int height = 0;
 		for (Level level : levels) {
 			maxBox = getUsedSpace(level, maxBox, height);
@@ -128,7 +139,7 @@ public class Container extends Box {
 	}
 
 	private Dimension getUsedSpace(Level level, Dimension maxBox, int height) {
-		for (Placement placement : level) {
+		for (Placement placement : level.getPlacements()) {
 			maxBox = boundingBox(maxBox, getUsedSpace(placement, height));
 		}
 		return maxBox;
@@ -150,4 +161,23 @@ public class Container extends Box {
 				max(b1.getHeight(), b2.getHeight()));
 
 	}
+
+    @Override
+    int getWidth() {
+        return width;
+    }
+
+    @Override
+    int getDepth() {
+        return depth;
+    }
+
+    @Override
+    int getHeight() {
+        return height;
+    }
+
+    String getName() {
+        return name;
+    }
 }

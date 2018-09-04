@@ -8,8 +8,6 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.github.skjolberg.packing.PermutationRotationIterator.PermutationRotation;
-
 public class PermutationRotationIteratorTest {
 
 	@Test
@@ -126,7 +124,7 @@ public class PermutationRotationIteratorTest {
 
 			// all rotations can fit
 			for(int i = 0; i < products.size(); i++) {
-				assertTrue(rotator.get(i).fitsInside3D(container));
+				assertTrue(container.getWidth() >= rotator.get(i).width && container.getHeight() >= rotator.get(i).height && container.getDepth() >= rotator.get(i).depth);
 			}
 		} while(rotator.nextRotation());
 		

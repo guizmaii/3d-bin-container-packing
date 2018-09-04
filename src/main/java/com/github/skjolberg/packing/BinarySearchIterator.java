@@ -1,50 +1,30 @@
 package com.github.skjolberg.packing;
 
-public class BinarySearchIterator {
+class BinarySearchIterator {
 
-	protected int low;
-	protected int high;
-	protected int mid;
+	private final int low;
+	private final int high;
+	private final int mid;
 	
-	public BinarySearchIterator(int low, int high) {
-		super();
-		this.low = low;
-		this.high = high;
+	BinarySearchIterator(int low, int high) {
+        this.low = low;
+        this.high = high;
+        this.mid = low + (high - low) / 2;
+    }
+
+	BinarySearchIterator lower() {
+	    return new BinarySearchIterator(low, mid - 1);
 	}
 
-	public BinarySearchIterator() {
+	BinarySearchIterator higher() {
+        return new BinarySearchIterator(mid + 1, high);
 	}
 
-	public int next() {
-		return mid = low + (high - low) / 2;
-	}
-	
-	public void lower() {
-		high = mid - 1;
-	}
-
-	public void higher() {
-		low = mid + 1;
-	}
-
-	public boolean hasNext() {
+	boolean hasNext() {
 		return low <= high;
 	}
-	
-	public void reset(int high, int low) {
-		this.high = high;
-		this.low = low;
-	}
-	
-	public int getHigh() {
-		return high;
-	}
-	
-	public int getLow() {
-		return low;
-	}
-	
-	public int getMid() {
-		return mid;
-	}
+
+    int getMid() {
+        return mid;
+    }
 }

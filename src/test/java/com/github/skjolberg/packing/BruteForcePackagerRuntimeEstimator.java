@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.github.skjolberg.packing.PermutationRotationIterator.PermutationRotation;
-
 public class BruteForcePackagerRuntimeEstimator {
 	
 	private static class Measurement {
@@ -68,7 +66,14 @@ public class BruteForcePackagerRuntimeEstimator {
 		while(deadline > System.currentTimeMillis() && n < 20) {
 			List<Box> containers = new ArrayList<Box>();
 			containers.add(new Box(5 * n, 10, 10));
-			Packager bruteForcePackager = new BruteForcePackagerEstimator(containers, true, true);
+
+			List<Dimension> dimensions =
+                containers
+                    .stream()
+                    .map(box -> new Dimension(box.getName(), box.getWidth(), box.getDepth(), box.getHeight()))
+                    .collect(Collectors.toList());
+
+            Packager bruteForcePackager = new BruteForcePackagerEstimator(dimensions, true, true);
 			
 			for(int k = 1; k <= n; k++) {
 				List<BoxItem> products1 = new ArrayList<BoxItem>();
@@ -82,8 +87,9 @@ public class BruteForcePackagerRuntimeEstimator {
 				}
 
 				PermutationRotation[] rotationMatrix = PermutationRotationIterator.toRotationMatrix(products1, true);
-				
-				PermutationRotationIterator iterator = new PermutationRotationIterator(containers.get(0), rotationMatrix);
+
+				Box box = containers.get(0);
+				PermutationRotationIterator iterator = new PermutationRotationIterator(new Dimension(box.getName(), box.getWidth(), box.getDepth(), box.getHeight()), rotationMatrix);
 				if(iterator.length() != n) {
 					throw new RuntimeException(iterator.length() +" != " + n + " for " + products1.size());
 				}
@@ -168,7 +174,14 @@ public class BruteForcePackagerRuntimeEstimator {
 		while(deadline > System.currentTimeMillis() && n < max) {
 			List<Box> containers = new ArrayList<Box>();
 			containers.add(new Box(5 * n, 10, 10));
-			Packager bruteForcePackager = new BruteForcePackagerEstimator(containers, true, true);
+
+            List<Dimension> dimensions =
+                containers
+                    .stream()
+                    .map(box -> new Dimension(box.getName(), box.getWidth(), box.getDepth(), box.getHeight()))
+                    .collect(Collectors.toList());
+
+            Packager bruteForcePackager = new BruteForcePackagerEstimator(dimensions, true, true);
 			
 			for(int k = 1; k <= n; k++) {
 				List<BoxItem> products1 = new ArrayList<BoxItem>();
@@ -182,8 +195,9 @@ public class BruteForcePackagerRuntimeEstimator {
 				}
 
 				PermutationRotation[] rotationMatrix = PermutationRotationIterator.toRotationMatrix(products1, true);
-				
-				PermutationRotationIterator iterator = new PermutationRotationIterator(containers.get(0), rotationMatrix);
+
+                Box box = containers.get(0);
+                PermutationRotationIterator iterator = new PermutationRotationIterator(new Dimension(box.getName(), box.getWidth(), box.getDepth(), box.getHeight()), rotationMatrix);
 				if(iterator.length() != n) {
 					throw new RuntimeException(iterator.length() +" != " + n + " for " + products1.size());
 				}

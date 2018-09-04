@@ -117,17 +117,17 @@ public abstract class Packager {
 		Adapter pack = adapter(boxes);
 
 		if(!binarySearch || dimensions.size() <= 2 || deadline == Long.MAX_VALUE) {
-			for (int i = 0; i < dimensions.size(); i++) {
-					
-				if(System.currentTimeMillis() > deadline) {
-					break;
-				}
-				
-				Container result = pack.pack(boxes, dimensions.get(i), deadline);
-				if(result != null) {
-					return result;
-				}
-			}
+            for (Dimension dimension : dimensions) {
+
+                if (System.currentTimeMillis() > deadline) {
+                    break;
+                }
+
+                Container result = pack.pack(boxes, dimension, deadline);
+                if (result != null) {
+                    return result;
+                }
+            }
 		} else {
 			Container[] results = new Container[dimensions.size()];
 			boolean[] checked = new boolean[results.length]; 
@@ -137,14 +137,12 @@ public abstract class Packager {
 				current.add(i);
 			}
 
-			BinarySearchIterator iterator = new BinarySearchIterator();
-
 			search:
 			do {
-				iterator.reset(current.size() - 1, 0);
+                BinarySearchIterator iterator = new BinarySearchIterator(current.size() - 1, 0);
 				
 				do {
-					int next = iterator.next();
+					int next = iterator.getMid();
 					int mid = current.get(next);
 
 					Container result = pack.pack(boxes, dimensions.get(mid), deadline);
@@ -152,10 +150,10 @@ public abstract class Packager {
 					checked[mid] = true;
 					if(result != null) {
 						results[mid] = result;
-						
-						iterator.lower();
+
+                        iterator = iterator.lower();
 					} else {
-						iterator.higher();
+                        iterator = iterator.higher();
 					}
 					if(System.currentTimeMillis() > deadline) {
 						break search;
@@ -181,36 +179,25 @@ public abstract class Packager {
 					}
 		        }
 	        } while(!current.isEmpty());
-		        
-			for(int i = 0; i < results.length; i++) {
-				if(results[i] != null) {
-					return results[i];
-				}
-			}
+
+            for (Container result : results) {
+                if (result != null) {
+                    return result;
+                }
+            }
 		}
 		return null;
 	}	
 	
 	protected abstract Adapter adapter(List<BoxItem> boxes);
 
-	protected boolean canHold(Dimension containerBox, List<BoxItem> boxes) {
-		for(BoxItem box : boxes) {
-			if(rotate3D) {
-				if(!containerBox.canHold3D(box.getBox())) {
-					return false;
-				}
-			} else {
-				if(!containerBox.canHold2D(box.getBox())) {
-					return false;
-				}
-			}
-		}
-		return true;
+	private boolean canHold(Dimension containerBox, List<BoxItem> boxes) {
+		return boxes.stream().allMatch(box -> (rotate3D && containerBox.canHold3D(box.getBox())) || containerBox.canHold2D(box.getBox()));
 	}
 	
-	public static List<Placement> getPlacements(int size) {
+	static List<Placement> getPlacements(int size) {
 		// each box will at most have a single placement with a space (and its remainder). 
-		List<Placement> placements = new ArrayList<Placement>(size);
+		List<Placement> placements = new ArrayList<>(size);
 
 		for(int i = 0; i < size; i++) {
 			Space a = new Space();
@@ -221,7 +208,7 @@ public abstract class Packager {
 			placements.add(new Placement(a));
 		}
 		return placements;
-	}		
+	}
 
 
 }

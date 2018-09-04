@@ -2,8 +2,6 @@ package com.github.skjolberg.packing;
 
 import java.util.List;
 
-import com.github.skjolberg.packing.PermutationRotationIterator.PermutationRotation;
-
 /**
  * Fit boxes into container, i.e. perform bin packing to a single container. 
  * <br><br>
@@ -114,7 +112,7 @@ public class BruteForcePackager extends Packager {
 		} while(rotator.nextPermutation());
 		
 		return null;
-	}	
+	}
 
 	protected boolean accept(Container container) {
 		return true;
@@ -152,16 +150,16 @@ public class BruteForcePackager extends Packager {
 		// stack in the 'sibling' space - the space left over between the used box and the selected free space
 		if(index < rotator.length()) {
 			Space remainder = nextPlacement.getSpace().getRemainder();
-			if(!remainder.isEmpty()) {
+			if(remainder.nonEmpty()) {
 				Box box = rotator.get(index);
-				
-				if(box.fitsInside3D(remainder)) {
+
+				if(remainder.getWidth() >= box.getWidth() && remainder.getHeight() >= box.getHeight() && remainder.getDepth() >= box.getDepth()) {
 					Placement placement = placements.get(index);
 					placement.setBox(box);
 
 					index++;
 					
-					placement.getSpace().copyFrom(remainder);
+					placement.getSpace().copyOf(remainder);
 					placement.getSpace().setParent(remainder);
 					placement.getSpace().getRemainder().setParent(remainder);
 					
@@ -216,12 +214,12 @@ public class BruteForcePackager extends Packager {
 	}
 
 	private boolean a(Space freespace, Box used, Placement target) {
-		if(target.getBox().fitsInside3D(freespace.getWidth(), freespace.getDepth() - used.getDepth(), freespace.getHeight())) {
-			target.getSpace().copyFrom(
+		if(freespace.getWidth() >= target.getBox().getWidth() && freespace.getHeight() >= target.getBox().getHeight() && freespace.getDepth() - used.getDepth() >= target.getBox().getDepth()) {
+			target.getSpace().copyOf(
 					freespace.getWidth(), freespace.getDepth() - used.getDepth(), freespace.getHeight(),
-					freespace.getX(), freespace.getY() + used.depth, freespace.getHeight()
+					freespace.getX(), freespace.getY() + used.getDepth(), freespace.getHeight()
 				);
-			target.getSpace().getRemainder().copyFrom(
+			target.getSpace().getRemainder().copyOf(
 					freespace.getWidth() - used.getWidth(), used.getDepth(), freespace.getHeight(),
 					freespace.getX() + used.getWidth(), freespace.getY(), freespace.getZ()
 				);
@@ -234,14 +232,14 @@ public class BruteForcePackager extends Packager {
 	}
 
 	private boolean b(Space freespace, Box used, Placement target) {
-		if(target.getBox().fitsInside3D(freespace.getWidth() - used.getWidth(), freespace.getDepth(), freespace.getHeight())) {
+		if(freespace.getWidth() - used.getWidth() >= target.getBox().getWidth() && freespace.getHeight() >= target.getBox().getHeight() && freespace.getDepth() >= target.getBox().getDepth()) {
 			// we have a winner
-			target.getSpace().copyFrom(
+			target.getSpace().copyOf(
 					freespace.getWidth() - used.getWidth(), freespace.getDepth(), freespace.getHeight(),
 					freespace.getX() + used.getWidth(), freespace.getY(), freespace.getZ()
 					);
 			
-			target.getSpace().getRemainder().copyFrom(
+			target.getSpace().getRemainder().copyOf(
 					used.getWidth(), freespace.getDepth() - used.getDepth(), freespace.getHeight(),
 					freespace.getX(), freespace.getY()+ used.getDepth(), freespace.getZ()
 					);

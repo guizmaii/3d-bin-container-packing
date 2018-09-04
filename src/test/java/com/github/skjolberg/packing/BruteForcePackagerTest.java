@@ -1,15 +1,17 @@
 package com.github.skjolberg.packing;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.junit.Ignore;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class BruteForcePackagerTest extends AbstractPackagerTest {
 
@@ -299,4 +301,30 @@ public class BruteForcePackagerTest extends AbstractPackagerTest {
 		BruteForcePackager packer = new BruteForcePackager(containers);
 		packer.pack(items);
 	}
+
+	@Test
+	public void testPermutationRotationIteratorSometimesThrowsIllegalArgumentException() {
+		List<Dimension> containers = Arrays.asList(
+				new Dimension("0", 2390, 1500, 1000),
+				new Dimension("1", 2400, 1500, 1000),
+				new Dimension("2", 2390, 1500, 1000)
+		);
+
+		List<BoxItem> items = Arrays.asList(new BoxItem(new Box(990, 1490, 2390), 1));
+
+
+        final Stream<Container> stream =
+            IntStream
+                .range(0, 10000)
+                .boxed()
+                .flatMap(i ->
+                        containers.stream().map(c -> CompletableFuture.supplyAsync(() -> {
+                            BruteForcePackager packer = new BruteForcePackager(Arrays.asList(c));
+                            return packer.pack(items);
+                        })).map(CompletableFuture::join)
+                );
+
+        assertTrue(stream.allMatch(Objects::nonNull));
+	}
+
 }

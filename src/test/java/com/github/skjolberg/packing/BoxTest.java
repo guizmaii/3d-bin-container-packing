@@ -26,15 +26,15 @@ public class BoxTest {
 		
 		Box box = new Box(1, 6, 3);
 		
-		Assert.assertTrue(box.fitRotate2D(1, 6));
+		Assert.assertNotNull(box.fitRotate2D(1, 6));
 		assertThat(box.getWidth(), is(1));
 		assertThat(box.getDepth(), is(6));
-		Assert.assertTrue(box.fitRotate2D(6, 1));
+		Assert.assertNotNull(box.fitRotate2D(6, 1));
 		assertThat(box.getWidth(), is(6));
 		assertThat(box.getDepth(), is(1));
 		
-		Assert.assertFalse(box.fitRotate2D(1, 3));
-		Assert.assertFalse(box.fitRotate2D(3, 1));
+		Assert.assertNull(box.fitRotate2D(1, 3));
+		Assert.assertNull(box.fitRotate2D(3, 1));
 
 	}
 	
@@ -43,17 +43,17 @@ public class BoxTest {
 		
 		Box box = new Box(1, 1, 10);
 		
-		Assert.assertTrue(box.fitRotate3DSmallestFootprint(1, 1, 10));
+		Assert.assertNotNull(box.fitRotate3DSmallestFootprint(1, 1, 10));
 		assertThat(box.getWidth(), is(1));
 		assertThat(box.getDepth(), is(1));
 		assertThat(box.getHeight(), is(10));
 
-		Assert.assertTrue(box.fitRotate3DSmallestFootprint(10, 1, 1));
+		Assert.assertNotNull(box.fitRotate3DSmallestFootprint(10, 1, 1));
 		assertThat(box.getWidth(), is(10));
 		assertThat(box.getDepth(), is(1));
 		assertThat(box.getHeight(), is(1));
 
-		Assert.assertTrue(box.fitRotate3DSmallestFootprint(1, 10, 1));
+		Assert.assertNotNull(box.fitRotate3DSmallestFootprint(1, 10, 1));
 		assertThat(box.getWidth(), is(1));
 		assertThat(box.getDepth(), is(10));
 		assertThat(box.getHeight(), is(1));
@@ -65,23 +65,23 @@ public class BoxTest {
 		
 		Box box = new Box(1, 1, 10);
 		
-		Assert.assertTrue(box.fitRotate3DSmallestFootprint(1, 5, 10)); // standing
-		assertThat(box.currentSurfaceArea(), is(1));
+		Assert.assertNotNull(box.fitRotate3DSmallestFootprint(1, 5, 10)); // standing
+		assertThat(box.getFootprint(), is(1));
 		assertThat(box.getWidth(), is(1));
 		assertThat(box.getDepth(), is(1));
 
-		Assert.assertTrue(box.fitRotate3DSmallestFootprint(10, 1, 5)); // lie down
-		assertThat(box.currentSurfaceArea(), is(10));
+		Assert.assertNotNull(box.fitRotate3DSmallestFootprint(10, 1, 5)); // lie down
+		assertThat(box.getFootprint(), is(10));
 		assertThat(box.getWidth(), is(10));
 		assertThat(box.getDepth(), is(1));
 
-		Assert.assertTrue(box.fitRotate3DSmallestFootprint(5, 10, 1)); // lie down
-		assertThat(box.currentSurfaceArea(), is(10));
+		Assert.assertNotNull(box.fitRotate3DSmallestFootprint(5, 10, 1)); // lie down
+		assertThat(box.getFootprint(), is(10));
 		assertThat(box.getWidth(), is(1));
 		assertThat(box.getDepth(), is(10));
 
-		Assert.assertTrue(box.fitRotate3DSmallestFootprint(5, 10, 10)); // standing
-		assertThat(box.currentSurfaceArea(), is(1));
+		Assert.assertNotNull(box.fitRotate3DSmallestFootprint(5, 10, 10)); // standing
+		assertThat(box.getFootprint(), is(1));
 		assertThat(box.getWidth(), is(1));
 		assertThat(box.getDepth(), is(1));
 

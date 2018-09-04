@@ -1,6 +1,7 @@
 package com.github.skjolberg.packing;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -31,93 +32,57 @@ import java.util.List;
  *      target="_top">next-lexicographical-permutation-algorithm</a>
  */
 
-public class PermutationRotationIterator {
-	
-	public static class PermutationRotation {
+public final class PermutationRotationIterator {
 
-		protected int count;
-		
-		protected Box[] boxes;
-
-		public Box[] getBoxes() {
-			return boxes;
-		}
-
-		public void setBoxes(Box[] boxes) {
-			this.boxes = boxes;
-		}
-
-		public void setCount(int count) {
-			this.count = count;
-		}
-		
-		public int getCount() {
-			return count;
-		}
-	}
-
-	
 	public static PermutationRotation[] toRotationMatrix(List<BoxItem> list, boolean rotate3D) {
 		PermutationRotation[] boxes = new PermutationRotation[list.size()];
 		for(int i = 0; i < list.size(); i++) {
-			Box box = list.get(i).getBox();
+			Box box0 = list.get(i).getBox();
 			
 			List<Box> result = new ArrayList<>();
 			if(rotate3D) {
-				Box box0 = box.clone();
-				boolean square0 = box.isSquare2D();
-				
 				result.add(box0);
 				
-				if(!box.isSquare3D()) {
+				if(!box0.isSquare3D()) {
 					
-					box.rotate3D();
-					boolean square1 = box.isSquare2D();
-					
-					result.add(box.clone());
+					Box box1 = box0.rotate3D();
+					result.add(box1);
 	
-					box.rotate3D();
-					boolean square2 = box.isSquare2D();
+					Box box2 = box1.rotate3D();
+					result.add(box2);
 	
-					result.add(box.clone());
-	
-					if(!square0 && !square1 && !square2) {
-						box.rotate2D3D();
+					if(!box0.isSquare2D() && !box1.isSquare2D() && !box2.isSquare2D()) {
+						Box box3 = box2.rotate2D3D();
+						result.add(box3);
 						
-						result.add(box.clone());
-						
-						box.rotate3D();
+						Box box4 = box3.rotate3D();
+						result.add(box4);
 		
-						result.add(box.clone());
-		
-						box.rotate3D();
-		
-						result.add(box.clone());
+						Box box5 = box4.rotate3D();
+						result.add(box5);
 					}
 				}
 			} else {
-				result.add(box.clone());
+				result.add(box0);
 				
 				// do not rotate 2d if square
-				if(!box.isSquare2D()) {
-					result.add(box.clone().rotate2D());
+				if(!box0.isSquare2D()) {
+					result.add(box0.rotate2D());
 				}
 			}
 
-			boxes[i] = new PermutationRotation();
-			boxes[i].setBoxes(result.toArray(new Box[result.size()]));
-			boxes[i].setCount(list.get(i).getCount());
+			boxes[i] = new PermutationRotation(list.get(i).getCount(), result.toArray(new Box[0]));
 		}
 		return boxes;
 	}
 	
-	private PermutationRotation[] matrix;
-	private int[] reset;
-	private int[] rotations; // 2^n or 6^n
-	private int[] permutations; // n!
+	private final PermutationRotation[] matrix;
+	private final int[] reset;
+	private final int[] rotations; // 2^n or 6^n
+	private final int[] permutations; // n!
 
 	public PermutationRotationIterator(List<BoxItem> list, Dimension bound, boolean rotate3D) {
-		this(bound, toRotationMatrix(list, rotate3D));
+		this(bound, PermutationRotationIterator.toRotationMatrix(list, rotate3D));
 	}
 
 	public PermutationRotationIterator(Dimension bound, PermutationRotation[] unconstrained) {
@@ -125,22 +90,18 @@ public class PermutationRotationIterator {
 
 		PermutationRotation[] matrix = new PermutationRotation[unconstrained.length];
 		for(int i = 0; i < unconstrained.length; i++) {
-			List<Box> result = new ArrayList<>();
-			
-			Box[] boxes = unconstrained[i].getBoxes();
-			for(int k = 0; k < boxes.length; k++) {
-				if(boxes[k] != null && boxes[k].fitsInside3D(bound)) {
-					result.add(boxes[k]);
-				}
-			}
-			if(result.isEmpty()) {
+			Box[] boxes =
+				Arrays
+					.stream(unconstrained[i].getBoxes())
+					.filter(box -> bound.getWidth() >= box.getWidth() && bound.getHeight() >= box.getHeight() && bound.getDepth() >= box.getDepth())
+					.toArray(Box[]::new);
+
+			if(boxes.length == 0) {
 				throw new IllegalArgumentException("Box at " + i + " does not fit") ;
 			}
-			matrix[i] = new PermutationRotation();
-			matrix[i].setBoxes(result.toArray(new Box[result.size()]));
-			matrix[i].setCount(unconstrained[i].getCount());
-			
-			for(int k = 0; k < unconstrained[i].count; k++) {
+			matrix[i] = new PermutationRotation(unconstrained[i].getCount(), boxes);
+
+			for(int k = 0; k < unconstrained[i].getCount(); k++) {
 				types.add(i);
 			}
 		}
@@ -158,13 +119,12 @@ public class PermutationRotationIterator {
 		
 		reset = new int[permutations.length];
 		rotations = new int[permutations.length];
-		System.arraycopy(reset, 0, rotations, 0, rotations.length);
 	}
 	
 	public boolean nextRotation() {
 		// next rotation
 		for(int i = 0; i < rotations.length; i++) {
-			while(rotations[i] < matrix[permutations[i]].boxes.length - 1) {
+			while(rotations[i] < matrix[permutations[i]].getBoxes().length - 1) {
 				rotations[i]++;
 				
 				// reset all previous counters 
@@ -193,11 +153,11 @@ public class PermutationRotationIterator {
 	public long countRotations() {
 		long n = 1;
 		for(int i = 0; i < rotations.length; i++) {
-			if(Long.MAX_VALUE / matrix[rotations[i]].boxes.length <= n) {
+			if(Long.MAX_VALUE / matrix[rotations[i]].getBoxes().length <= n) {
 				return -1L;
 			}
 
-			n = n * matrix[rotations[i]].boxes.length;
+			n = n * matrix[rotations[i]].getBoxes().length;
 		}
 		return n;
 	}
@@ -257,7 +217,7 @@ public class PermutationRotationIterator {
 
 	
 	public Box get(int index) {
-		return matrix[permutations[index]].boxes[rotations[index]];
+		return matrix[permutations[index]].getBoxes()[rotations[index]];
 	}
 	
 	public boolean nextPermutation() {
