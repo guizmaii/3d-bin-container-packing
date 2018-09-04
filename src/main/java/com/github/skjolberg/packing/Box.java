@@ -40,7 +40,7 @@ public class Box extends WithDimensions {
 	/**
 	 * 
 	 * Rotate box, i.e. in 3D
-	 * 
+	 * src/main/java/com/github/skjolberg/packing/LargestAreaFitFirstPackager.java
 	 * @return this instance
 	 */
 
